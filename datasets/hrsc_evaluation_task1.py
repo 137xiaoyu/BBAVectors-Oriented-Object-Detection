@@ -16,7 +16,7 @@ import os
 #import cPickle
 import numpy as np
 import matplotlib.pyplot as plt
-from . import polyiou
+import polyiou
 from functools import partial
 import cv2
 

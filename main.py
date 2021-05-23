@@ -1,3 +1,5 @@
+import sys
+sys.path.append('datasets/DOTA_devkit')
 import argparse
 import train
 import test
@@ -23,11 +25,12 @@ def parse_args():
     parser.add_argument('--resume_train', type=str, default='', help='Weights resumed in training')
     parser.add_argument('--resume', type=str, default='model_50.pth', help='Weights resumed in testing and evaluation')
     parser.add_argument('--dataset', type=str, default='dota', help='Name of dataset')
-    parser.add_argument('--data_dir', type=str, default='../Datasets/dota', help='Data directory')
-    parser.add_argument('--phase', type=str, default='test', help='Phase choice= {train, test, eval}')
+    parser.add_argument('--data_dir', type=str, default='D:/137/dataset/MunichDatasetVehicleDetection-2015-old/DOTA', help='Data directory')
+    parser.add_argument('--phase', type=str, default='train', help='Phase choice= {train, test, eval}')
     parser.add_argument('--wh_channels', type=int, default=8, help='Number of channels for the vectors (4x2)')
     args = parser.parse_args()
     return args
+
 
 if __name__ == '__main__':
     args = parse_args()
