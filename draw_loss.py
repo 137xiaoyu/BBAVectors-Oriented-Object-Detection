@@ -10,7 +10,7 @@ def load_data(filename):
     f.close()
     return pts
 
-dataset = 'hrsc'
+dataset = 'dota'
 weights_path = 'weights_'+dataset+''
 
 ###############################################
@@ -57,5 +57,5 @@ def draw_loss_ap():
 
 
 if __name__ == '__main__':
-    # draw_loss()
-    draw_loss_ap()
+    draw_loss()
+    # draw_loss_ap()

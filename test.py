@@ -156,7 +156,7 @@ class TestModule(object):
                     box = np.asarray([tl, tr, br, bl], np.float32)
                     cen_pts = np.mean(box, axis=0)
                     cv2.line(ori_image, (int(cen_pts[0]), int(cen_pts[1])), (int(tt[0]), int(tt[1])), (0,0,255),1,1)
-                    cv2.line(ori_image, (int(cen_pts[0]), int(cen_pts[1])), (int(rr[0]), int(rr[1])), (255,0,255),1,1)
+                    cv2.line(ori_image, (int(cen_pts[0]), int(cen_pts[1])), (int(rr[0]), int(rr[1])), (0,255,255),1,1)
                     cv2.line(ori_image, (int(cen_pts[0]), int(cen_pts[1])), (int(bb[0]), int(bb[1])), (0,255,0),1,1)
                     cv2.line(ori_image, (int(cen_pts[0]), int(cen_pts[1])), (int(ll[0]), int(ll[1])), (255,0,0),1,1)
 
@@ -167,8 +167,8 @@ class TestModule(object):
                     ori_image = cv2.drawContours(ori_image, [np.int0(box)], -1, (255,0,255),1,1)
                     # box = cv2.boxPoints(cv2.minAreaRect(box))
                     # ori_image = cv2.drawContours(ori_image, [np.int0(box)], -1, (0,255,0),1,1)
-                    cv2.putText(ori_image, '{:.2f} {}'.format(score, cat), (box[1][0], box[1][1]),
-                                cv2.FONT_HERSHEY_COMPLEX, 0.5, (0,255,255), 1,1)
+                    # cv2.putText(ori_image, '{:.2f} {}'.format(score, cat), (box[1][0], box[1][1]),
+                    #             cv2.FONT_HERSHEY_COMPLEX, 0.5, (255,255,0), 1,1)
 
             if args.dataset == 'hrsc':
                 gt_anno = dsets.load_annotation(cnt)
