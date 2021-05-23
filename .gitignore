@@ -1,3 +1,7 @@
 .vscode
 __pycache__
 datasets/DOTA_devkit
+weights_dota
+merge_dota
+result_dota
+heatmap.png

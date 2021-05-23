@@ -45,18 +45,18 @@ class TestModule(object):
         img = img + 1. * clmsk - 1. * mskd
         return np.uint8(img)
 
-    def imshow_heatmap(self, pr_dec, images):
-        wh = pr_dec['wh']
-        hm = pr_dec['hm']
+    def imshow_heatmap(self, pr_decs, image):
+        wh = pr_decs['wh']
+        hm = pr_decs['hm']
         cls_theta = pr_decs['cls_theta']
         wh_w = wh[0, 0, :, :].data.cpu().numpy()
         wh_h = wh[0, 1, :, :].data.cpu().numpy()
         hm = hm[0, 0, :, :].data.cpu().numpy()
         cls_theta = cls_theta[0, 0, :, :].data.cpu().numpy()
-        images = np.transpose((images.squeeze(0).data.cpu().numpy() + 0.5) * 255, (1, 2, 0)).astype(np.uint8)
-        wh_w = cv2.resize(wh_w, (images.shape[1], images.shape[0]))
-        wh_h = cv2.resize(wh_h, (images.shape[1], images.shape[0]))
-        hm = cv2.resize(hm, (images.shape[1], images.shape[0]))
+        image = np.transpose((image.squeeze(0).data.cpu().numpy() + 0.5) * 255, (1, 2, 0)).astype(np.uint8)
+        wh_w = cv2.resize(wh_w, (image.shape[1], image.shape[0]))
+        wh_h = cv2.resize(wh_h, (image.shape[1], image.shape[0]))
+        hm = cv2.resize(hm, (image.shape[1], image.shape[0]))
         fig = plt.figure(1)
         ax1 = fig.add_subplot(2, 3, 1)
         ax1.set_xlabel('width')
@@ -72,7 +72,7 @@ class TestModule(object):
         ax5.imshow(cls_theta)
         ax6 = fig.add_subplot(2, 3, 6)
         ax6.set_xlabel('input image')
-        ax6.imshow(images)
+        ax6.imshow(image)
         plt.savefig('heatmap.png')
 
 
@@ -103,7 +103,7 @@ class TestModule(object):
             with torch.no_grad():
                 pr_decs = self.model(image)
 
-            #self.imshow_heatmap(pr_decs[2], image)
+            # self.imshow_heatmap(pr_decs, image)
 
             torch.cuda.synchronize(self.device)
             decoded_pts = []
