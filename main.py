@@ -14,14 +14,14 @@ import os
 def parse_args():
     parser = argparse.ArgumentParser(description='BBAVectors Implementation')
     parser.add_argument('--data_dir', type=str, default='D:/137/dataset/MunichDatasetVehicleDetection-2015-old/DOTA', help='Data directory')
-    parser.add_argument('--resume', type=str, default='model_last.pth', help='Weights resumed in testing and evaluation')
 
-    parser.add_argument('--num_epoch', type=int, default=60, help='Number of epochs')
     parser.add_argument('--batch_size', type=int, default=8, help='Number of batch size')
     parser.add_argument('--num_workers', type=int, default=8, help='Number of workers')
     
+    parser.add_argument('--num_epoch', type=int, default=60, help='Number of epochs')
+    parser.add_argument('--resume_train', type=str, default='', help='Weights resumed in training')
     parser.add_argument('--phase', type=str, default='train', help='Phase choice= {train, test, eval}')
-    parser.add_argument('--resume_train', type=str, default='model_30.pth', help='Weights resumed in training')
+    parser.add_argument('--resume', type=str, default='model_last.pth', help='Weights resumed in testing and evaluation')
     parser.add_argument('--conf_thresh', type=float, default=0.1, help='Confidence threshold, 0.1 for general evaluation')
     
     parser.add_argument('--init_lr', type=float, default=1.25e-4, help='Initial learning rate')

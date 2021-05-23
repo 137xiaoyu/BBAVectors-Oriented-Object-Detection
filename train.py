@@ -72,7 +72,7 @@ class TrainModule(object):
             for k, v in state.items():
                 if isinstance(v, torch.Tensor):
                     state[k] = v.cuda()
-        epoch = checkpoint['epoch']
+        epoch = checkpoint['epoch'] + 1
         # loss = checkpoint['loss']
         return model, optimizer, epoch
 

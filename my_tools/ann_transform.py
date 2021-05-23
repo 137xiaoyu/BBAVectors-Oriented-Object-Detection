@@ -3,7 +3,7 @@ import glob
 import math
 
 
-train_data_dir = 'E:\\137\\学业\\研究生\\课堂\\第二学期\\模式识别实验\\data\\MunichDatasetVehicleDetection-2015-old\\Train'
+train_data_dir = 'D:\\137\\学业\\研究生\\课堂\\第二学期\\模式识别实验\\data\\MunichDatasetVehicleDetection-2015-old\\Train'
 output_dota_ann_dir = 'dota_ann_files'
 CONVERT_TO_INTEGER = False  # convert to integer if necessary
 
@@ -42,21 +42,21 @@ if __name__ == '__main__':
                         if width == 0 or height == 0:
                             continue
 
+                        hypotenuse = math.sqrt(width**2 + height**2)
                         angle = math.radians(angle)
-                        half_diagonal_len = math.sqrt(width**2 + height**2)
                         angle_diff = math.atan(height/width)
                         angle1 = angle + angle_diff
                         angle2 = angle - angle_diff
 
-                        x1 = cx + half_diagonal_len*math.cos(angle1)
-                        x2 = cx + half_diagonal_len*math.cos(angle2)
-                        x3 = cx - half_diagonal_len*math.cos(angle1)
-                        x4 = cx - half_diagonal_len*math.cos(angle2)
+                        x1 = cx + hypotenuse*math.cos(angle1)
+                        x2 = cx + hypotenuse*math.cos(angle2)
+                        x3 = cx - hypotenuse*math.cos(angle1)
+                        x4 = cx - hypotenuse*math.cos(angle2)
 
-                        y1 = cy + half_diagonal_len*math.sin(angle1)
-                        y2 = cy + half_diagonal_len*math.sin(angle2)
-                        y3 = cy - half_diagonal_len*math.sin(angle1)
-                        y4 = cy - half_diagonal_len*math.sin(angle2)
+                        y1 = cy - hypotenuse*math.sin(angle1)
+                        y2 = cy - hypotenuse*math.sin(angle2)
+                        y3 = cy + hypotenuse*math.sin(angle1)
+                        y4 = cy + hypotenuse*math.sin(angle2)
 
                         if CONVERT_TO_INTEGER:
                             x1, x2, x3, x4, y1, y2, y3, y4 = map(
