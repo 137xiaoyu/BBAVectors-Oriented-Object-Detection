@@ -18,10 +18,10 @@ def parse_args():
     parser.add_argument('--batch_size', type=int, default=8, help='Number of batch size')
     parser.add_argument('--num_workers', type=int, default=8, help='Number of workers')
     
-    parser.add_argument('--num_epoch', type=int, default=60, help='Number of epochs')
+    parser.add_argument('--num_epoch', type=int, default=150, help='Number of epochs')
     parser.add_argument('--resume_train', type=str, default='', help='Weights resumed in training')
-    parser.add_argument('--phase', type=str, default='train', help='Phase choice= {train, test, eval}')
-    parser.add_argument('--resume', type=str, default='model_last.pth', help='Weights resumed in testing and evaluation')
+    parser.add_argument('--phase', type=str, default='test', help='Phase choice= {train, test, eval}')
+    parser.add_argument('--resume', type=str, default='model_150.pth', help='Weights resumed in testing and evaluation')
     parser.add_argument('--conf_thresh', type=float, default=0.18, help='Confidence threshold, 0.1 for general evaluation')
     
     parser.add_argument('--init_lr', type=float, default=1.25e-4, help='Initial learning rate')

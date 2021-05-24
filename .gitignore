@@ -2,6 +2,7 @@
 __pycache__
 datasets/DOTA_devkit
 weights_dota
+weights_dota_*
 merge_dota
 result_dota
 heatmap.png

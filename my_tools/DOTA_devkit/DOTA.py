@@ -114,7 +114,7 @@ class DOTA:
         return imgs
 
 if __name__ == '__main__':
-    examplesplit = DOTA('D:/137/dataset/MunichDatasetVehicleDetection-2015-old/DOTA')
+    examplesplit = DOTA('D:/137/dataset/MunichDatasetVehicleDetection-2015-old/DOTA_All')
     imgids = examplesplit.getImgIds(catNms=['pkw'])
     img = examplesplit.loadImgs(imgids)
     for imgid in imgids:

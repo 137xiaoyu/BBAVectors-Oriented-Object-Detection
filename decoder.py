@@ -67,7 +67,7 @@ class DecDecoder(object):
         # add
         cls_theta = self._tranpose_and_gather_feat(cls_theta, inds)
         cls_theta = cls_theta.view(batch, self.K, 1)
-        mask = (cls_theta>0.8).float().view(batch, self.K, 1)
+        mask = (cls_theta>-0.8).float().view(batch, self.K, 1)
         #
         tt_x = (xs+wh[..., 0:1])*mask + (xs)*(1.-mask)
         tt_y = (ys+wh[..., 1:2])*mask + (ys-wh[..., 9:10]/2)*(1.-mask)
@@ -77,7 +77,48 @@ class DecDecoder(object):
         bb_y = (ys+wh[..., 5:6])*mask + (ys+wh[..., 9:10]/2)*(1.-mask)
         ll_x = (xs+wh[..., 6:7])*mask + (xs-wh[..., 8:9]/2)*(1.-mask)
         ll_y = (ys+wh[..., 7:8])*mask + (ys)*(1.-mask)
-        #
+        # # 
+        # cls_theta = torch.round(cls_theta)
+        # ll_theta = (cls_theta == 1).nonzero()[:, 1]
+        # tt_theta = (cls_theta == 2).nonzero()[:, 1]
+        # rr_theta = (cls_theta == 3).nonzero()[:, 1]
+        # bb_theta = (cls_theta == 4).nonzero()[:, 1]
+        # # 
+        # tmp_x = bb_x[:, ll_theta, :]
+        # tmp_y = bb_y[:, ll_theta, :]
+        # bb_x[:, ll_theta, :] = ll_x[:, ll_theta, :]
+        # bb_y[:, ll_theta, :] = ll_y[:, ll_theta, :]
+        # ll_x[:, ll_theta, :] = tt_x[:, ll_theta, :]
+        # ll_y[:, ll_theta, :] = tt_y[:, ll_theta, :]
+        # tt_x[:, ll_theta, :] = rr_x[:, ll_theta, :]
+        # tt_y[:, ll_theta, :] = rr_y[:, ll_theta, :]
+        # rr_x[:, ll_theta, :] = tmp_x
+        # rr_y[:, ll_theta, :] = tmp_y
+        # # 
+        # tmp_x = bb_x[:, tt_theta, :]
+        # tmp_y = bb_y[:, tt_theta, :]
+        # bb_x[:, tt_theta, :] = tt_x[:, tt_theta, :]
+        # bb_y[:, tt_theta, :] = tt_y[:, tt_theta, :]
+        # tt_x[:, tt_theta, :] = tmp_x
+        # tt_y[:, tt_theta, :] = tmp_y
+        # tmp_x = ll_x[:, tt_theta, :]
+        # tmp_y = ll_y[:, tt_theta, :]
+        # ll_x[:, tt_theta, :] = rr_x[:, tt_theta, :]
+        # ll_y[:, tt_theta, :] = rr_y[:, tt_theta, :]
+        # rr_x[:, tt_theta, :] = tmp_x
+        # rr_y[:, tt_theta, :] = tmp_y
+        # # 
+        # tmp_x = bb_x[:, rr_theta, :]
+        # tmp_y = bb_y[:, rr_theta, :]
+        # bb_x[:, rr_theta, :] = rr_x[:, rr_theta, :]
+        # bb_y[:, rr_theta, :] = rr_y[:, rr_theta, :]
+        # rr_x[:, rr_theta, :] = tt_x[:, rr_theta, :]
+        # rr_y[:, rr_theta, :] = tt_y[:, rr_theta, :]
+        # tt_x[:, rr_theta, :] = ll_x[:, rr_theta, :]
+        # tt_y[:, rr_theta, :] = ll_y[:, rr_theta, :]
+        # ll_x[:, rr_theta, :] = tmp_x
+        # ll_y[:, rr_theta, :] = tmp_y
+        # #
         detections = torch.cat([xs,                      # cen_x
                                 ys,                      # cen_y
                                 tt_x,

@@ -165,6 +165,7 @@ class TestModule(object):
                     # cv2.line(ori_image, (int(cen_pts[0]), int(cen_pts[1])), (int(br[0]), int(br[1])), (0,255,0),1,1)
                     # cv2.line(ori_image, (int(cen_pts[0]), int(cen_pts[1])), (int(bl[0]), int(bl[1])), (255,0,0),1,1)
                     ori_image = cv2.drawContours(ori_image, [np.int0(box)], -1, (255,0,255),1,1)
+                    cv2.line(ori_image, (int(bl[0]), int(bl[1])), (int(br[0]), int(br[1])), (0,255,0),1,1)
                     # box = cv2.boxPoints(cv2.minAreaRect(box))
                     # ori_image = cv2.drawContours(ori_image, [np.int0(box)], -1, (0,255,0),1,1)
                     # cv2.putText(ori_image, '{:.2f} {}'.format(score, cat), (box[1][0], box[1][1]),
