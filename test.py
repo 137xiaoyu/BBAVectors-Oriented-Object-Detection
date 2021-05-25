@@ -108,10 +108,12 @@ class TestModule(object):
             torch.cuda.synchronize(self.device)
             decoded_pts = []
             decoded_scores = []
+            decoded_directions = []
             predictions = self.decoder.ctdet_decode(pr_decs)
-            pts0, scores0 = func_utils.decode_prediction(predictions, dsets, args, img_id, down_ratio)
+            pts0, scores0, directions0 = func_utils.decode_prediction(predictions, dsets, args, img_id, down_ratio)
             decoded_pts.append(pts0)
             decoded_scores.append(scores0)
+            decoded_directions.append(directions0)
             #nms
             results = {cat:[] for cat in dsets.category}
             for cat in dsets.category:
@@ -119,13 +121,16 @@ class TestModule(object):
                     continue
                 pts_cat = []
                 scores_cat = []
-                for pts0, scores0 in zip(decoded_pts, decoded_scores):
+                directions_cat = []
+                for pts0, scores0, directions0 in zip(decoded_pts, decoded_scores, decoded_directions):
                     pts_cat.extend(pts0[cat])
                     scores_cat.extend(scores0[cat])
+                    directions_cat.extend(directions0[cat])
                 pts_cat = np.asarray(pts_cat, np.float32)
                 scores_cat = np.asarray(scores_cat, np.float32)
+                directions_cat = np.asarray(directions_cat, np.float32)
                 if pts_cat.shape[0]:
-                    nms_results = func_utils.non_maximum_suppression(pts_cat, scores_cat)
+                    nms_results = func_utils.non_maximum_suppression(pts_cat, scores_cat, directions_cat)
                     results[cat].extend(nms_results)
 
             end_time = time.time()
@@ -142,11 +147,13 @@ class TestModule(object):
                     continue
                 result = results[cat]
                 for pred in result:
-                    score = pred[-1]
-                    tl = np.asarray([pred[0], pred[1]], np.float32)
-                    tr = np.asarray([pred[2], pred[3]], np.float32)
-                    br = np.asarray([pred[4], pred[5]], np.float32)
-                    bl = np.asarray([pred[6], pred[7]], np.float32)
+                    score = pred[8]
+                    direction = pred[9]
+                    
+                    tr = np.asarray([pred[0], pred[1]], np.float32)
+                    br = np.asarray([pred[2], pred[3]], np.float32)
+                    bl = np.asarray([pred[4], pred[5]], np.float32)
+                    tl = np.asarray([pred[6], pred[7]], np.float32)
 
                     tt = (np.asarray(tl, np.float32) + np.asarray(tr, np.float32)) / 2
                     rr = (np.asarray(tr, np.float32) + np.asarray(br, np.float32)) / 2
@@ -155,17 +162,35 @@ class TestModule(object):
 
                     box = np.asarray([tl, tr, br, bl], np.float32)
                     cen_pts = np.mean(box, axis=0)
-                    cv2.line(ori_image, (int(cen_pts[0]), int(cen_pts[1])), (int(tt[0]), int(tt[1])), (0,0,255),1,1)
-                    cv2.line(ori_image, (int(cen_pts[0]), int(cen_pts[1])), (int(rr[0]), int(rr[1])), (0,255,255),1,1)
-                    cv2.line(ori_image, (int(cen_pts[0]), int(cen_pts[1])), (int(bb[0]), int(bb[1])), (0,255,0),1,1)
-                    cv2.line(ori_image, (int(cen_pts[0]), int(cen_pts[1])), (int(ll[0]), int(ll[1])), (255,0,0),1,1)
+                    
+                    # cv2.line(ori_image, (int(cen_pts[0]), int(cen_pts[1])), (int(tt[0]), int(tt[1])), (0,0,255),1,1)
+                    # cv2.line(ori_image, (int(cen_pts[0]), int(cen_pts[1])), (int(rr[0]), int(rr[1])), (0,255,255),1,1)
+                    # cv2.line(ori_image, (int(cen_pts[0]), int(cen_pts[1])), (int(bb[0]), int(bb[1])), (0,255,0),1,1)
+                    # cv2.line(ori_image, (int(cen_pts[0]), int(cen_pts[1])), (int(ll[0]), int(ll[1])), (255,0,0),1,1)
 
+                    ori_image = cv2.drawContours(ori_image, [np.int0(box)], -1, (255,0,255),1,1)
+                    
+                    # draw main direction
+                    if direction == 0:
+                        # cv2.line(ori_image, (int(cen_pts[0]), int(cen_pts[1])), (int(tt[0]), int(tt[1])), (0,255,0),1,1)
+                        cv2.line(ori_image, (int(tl[0]), int(tl[1])), (int(tr[0]), int(tr[1])), (0,255,0),1,1)
+                    elif direction == 1:
+                        # cv2.line(ori_image, (int(cen_pts[0]), int(cen_pts[1])), (int(rr[0]), int(rr[1])), (0,255,0),1,1)
+                        cv2.line(ori_image, (int(tr[0]), int(tr[1])), (int(br[0]), int(br[1])), (0,255,0),1,1)
+                    elif direction == 2:
+                        # cv2.line(ori_image, (int(cen_pts[0]), int(cen_pts[1])), (int(bb[0]), int(bb[1])), (0,255,0),1,1)
+                        cv2.line(ori_image, (int(bl[0]), int(bl[1])), (int(br[0]), int(br[1])), (0,255,0),1,1)
+                    elif direction == 3:
+                        # cv2.line(ori_image, (int(cen_pts[0]), int(cen_pts[1])), (int(ll[0]), int(ll[1])), (0,255,0),1,1)
+                        cv2.line(ori_image, (int(tl[0]), int(tl[1])), (int(bl[0]), int(bl[1])), (0,255,0),1,1)
+                    
+                    # draw main direction vector of directional BBA vectors
+                    # cv2.line(ori_image, (int(cen_pts[0]), int(cen_pts[1])), (int(ll[0]), int(ll[1])), (0,255,0),1,1)
+                    
                     # cv2.line(ori_image, (int(cen_pts[0]), int(cen_pts[1])), (int(tl[0]), int(tl[1])), (0,0,255),1,1)
                     # cv2.line(ori_image, (int(cen_pts[0]), int(cen_pts[1])), (int(tr[0]), int(tr[1])), (255,0,255),1,1)
                     # cv2.line(ori_image, (int(cen_pts[0]), int(cen_pts[1])), (int(br[0]), int(br[1])), (0,255,0),1,1)
                     # cv2.line(ori_image, (int(cen_pts[0]), int(cen_pts[1])), (int(bl[0]), int(bl[1])), (255,0,0),1,1)
-                    ori_image = cv2.drawContours(ori_image, [np.int0(box)], -1, (255,0,255),1,1)
-                    cv2.line(ori_image, (int(bl[0]), int(bl[1])), (int(br[0]), int(br[1])), (0,255,0),1,1)
                     # box = cv2.boxPoints(cv2.minAreaRect(box))
                     # ori_image = cv2.drawContours(ori_image, [np.int0(box)], -1, (0,255,0),1,1)
                     # cv2.putText(ori_image, '{:.2f} {}'.format(score, cat), (box[1][0], box[1][1]),

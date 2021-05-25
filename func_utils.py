@@ -11,6 +11,7 @@ def decode_prediction(predictions, dsets, args, img_id, down_ratio):
 
     pts0 = {cat: [] for cat in dsets.category}
     scores0 = {cat: [] for cat in dsets.category}
+    directions0 = {cat: [] for cat in dsets.category}
     for pred in predictions:
         cen_pt = np.asarray([pred[0], pred[1]], np.float32)
         tt = np.asarray([pred[2], pred[3]], np.float32)
@@ -23,15 +24,17 @@ def decode_prediction(predictions, dsets, args, img_id, down_ratio):
         br = bb + rr - cen_pt
         score = pred[10]
         clse = pred[11]
+        direction = pred[12]
         pts = np.asarray([tr, br, bl, tl], np.float32)
         pts[:, 0] = pts[:, 0] * down_ratio / args.input_w * w
         pts[:, 1] = pts[:, 1] * down_ratio / args.input_h * h
         pts0[dsets.category[int(clse)]].append(pts)
         scores0[dsets.category[int(clse)]].append(score)
-    return pts0, scores0
+        directions0[dsets.category[int(clse)]].append(direction)
+    return pts0, scores0, directions0
 
 
-def non_maximum_suppression(pts, scores):
+def non_maximum_suppression(pts, scores, directions):
     nms_item = np.concatenate([pts[:, 0:1, 0],
                                pts[:, 0:1, 1],
                                pts[:, 1:2, 0],
@@ -40,7 +43,8 @@ def non_maximum_suppression(pts, scores):
                                pts[:, 2:3, 1],
                                pts[:, 3:4, 0],
                                pts[:, 3:4, 1],
-                               scores[:, np.newaxis]], axis=1)
+                               scores[:, np.newaxis],
+                               directions[:, np.newaxis]], axis=1)
     nms_item = np.asarray(nms_item, np.float64)
     keep_index = py_cpu_nms_poly_fast(dets=nms_item, thresh=0.1)
     return nms_item[keep_index]

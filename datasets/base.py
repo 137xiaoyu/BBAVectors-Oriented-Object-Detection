@@ -155,98 +155,98 @@ class BaseDataset(data.Dataset):
         return tt_new,rr_new,bb_new,ll_new
     
 
-    def get_pts_pos(self, pts):
-        argsorted_pts_x = np.argsort(pts[:, 0], axis=0)
-        argsorted_pts_y = np.argsort(pts[:, 1], axis=0)
-        sorted_pts = np.zeros(pts.shape, dtype=np.int32)
-        for i, pt in enumerate(sorted_pts):
-            x_pos = np.argwhere(argsorted_pts_x == i)
-            y_pos = np.argwhere(argsorted_pts_y == i)
-            sorted_pts[i] = [x_pos, y_pos]
-        pts_pos = []
-        for i, pt in enumerate(pts):
-            if sorted_pts[i, 0] > 1 and sorted_pts[i, 1] <= 1:
-                pos = 0
-            elif sorted_pts[i, 0] <= 1 and sorted_pts[i, 1] <= 1:
-                pos = 1
-            elif sorted_pts[i, 0] <= 1 and sorted_pts[i, 1] > 1:
-                pos = 2
-            elif sorted_pts[i, 0] > 1 and sorted_pts[i, 1] > 1:
-                pos = 3
-            pts_pos.append(pos)
+    # def get_pts_pos(self, pts):
+    #     argsorted_pts_x = np.argsort(pts[:, 0], axis=0)
+    #     argsorted_pts_y = np.argsort(pts[:, 1], axis=0)
+    #     sorted_pts = np.zeros(pts.shape, dtype=np.int32)
+    #     for i, pt in enumerate(sorted_pts):
+    #         x_pos = np.argwhere(argsorted_pts_x == i)
+    #         y_pos = np.argwhere(argsorted_pts_y == i)
+    #         sorted_pts[i] = [x_pos, y_pos]
+    #     pts_pos = []
+    #     for i, pt in enumerate(pts):
+    #         if sorted_pts[i, 0] > 1 and sorted_pts[i, 1] <= 1:
+    #             pos = 0
+    #         elif sorted_pts[i, 0] <= 1 and sorted_pts[i, 1] <= 1:
+    #             pos = 1
+    #         elif sorted_pts[i, 0] <= 1 and sorted_pts[i, 1] > 1:
+    #             pos = 2
+    #         elif sorted_pts[i, 0] > 1 and sorted_pts[i, 1] > 1:
+    #             pos = 3
+    #         pts_pos.append(pos)
 
-        repeated_pos_ind = np.argwhere(np.array(pts_pos) == 0)[:, 0]
-        if repeated_pos_ind.shape[0] > 1:
-            if 1 not in pts_pos:
-                if pts[repeated_pos_ind[0]][0] > pts[repeated_pos_ind[1]][0]:
-                    pts_pos[repeated_pos_ind[0]] = 0
-                    pts_pos[repeated_pos_ind[1]] = 1
-                else:
-                    pts_pos[repeated_pos_ind[0]] = 1
-                    pts_pos[repeated_pos_ind[1]] = 0
-            elif 3 not in pts_pos:
-                if pts[repeated_pos_ind[0]][1] < pts[repeated_pos_ind[1]][1]:
-                    pts_pos[repeated_pos_ind[0]] = 0
-                    pts_pos[repeated_pos_ind[1]] = 3
-                else:
-                    pts_pos[repeated_pos_ind[0]] = 3
-                    pts_pos[repeated_pos_ind[1]] = 0
+    #     repeated_pos_ind = np.argwhere(np.array(pts_pos) == 0)[:, 0]
+    #     if repeated_pos_ind.shape[0] > 1:
+    #         if 1 not in pts_pos:
+    #             if pts[repeated_pos_ind[0]][0] > pts[repeated_pos_ind[1]][0]:
+    #                 pts_pos[repeated_pos_ind[0]] = 0
+    #                 pts_pos[repeated_pos_ind[1]] = 1
+    #             else:
+    #                 pts_pos[repeated_pos_ind[0]] = 1
+    #                 pts_pos[repeated_pos_ind[1]] = 0
+    #         elif 3 not in pts_pos:
+    #             if pts[repeated_pos_ind[0]][1] < pts[repeated_pos_ind[1]][1]:
+    #                 pts_pos[repeated_pos_ind[0]] = 0
+    #                 pts_pos[repeated_pos_ind[1]] = 3
+    #             else:
+    #                 pts_pos[repeated_pos_ind[0]] = 3
+    #                 pts_pos[repeated_pos_ind[1]] = 0
 
-        repeated_pos_ind = np.argwhere(np.array(pts_pos) == 1)[:, 0]
-        if repeated_pos_ind.shape[0] > 1:
-            if 0 not in pts_pos:
-                if pts[repeated_pos_ind[0]][0] < pts[repeated_pos_ind[1]][0]:
-                    pts_pos[repeated_pos_ind[0]] = 1
-                    pts_pos[repeated_pos_ind[1]] = 0
-                else:
-                    pts_pos[repeated_pos_ind[0]] = 0
-                    pts_pos[repeated_pos_ind[1]] = 1
-            elif 2 not in pts_pos:
-                if pts[repeated_pos_ind[0]][1] < pts[repeated_pos_ind[1]][1]:
-                    pts_pos[repeated_pos_ind[0]] = 1
-                    pts_pos[repeated_pos_ind[1]] = 2
-                else:
-                    pts_pos[repeated_pos_ind[0]] = 2
-                    pts_pos[repeated_pos_ind[1]] = 1
+    #     repeated_pos_ind = np.argwhere(np.array(pts_pos) == 1)[:, 0]
+    #     if repeated_pos_ind.shape[0] > 1:
+    #         if 0 not in pts_pos:
+    #             if pts[repeated_pos_ind[0]][0] < pts[repeated_pos_ind[1]][0]:
+    #                 pts_pos[repeated_pos_ind[0]] = 1
+    #                 pts_pos[repeated_pos_ind[1]] = 0
+    #             else:
+    #                 pts_pos[repeated_pos_ind[0]] = 0
+    #                 pts_pos[repeated_pos_ind[1]] = 1
+    #         elif 2 not in pts_pos:
+    #             if pts[repeated_pos_ind[0]][1] < pts[repeated_pos_ind[1]][1]:
+    #                 pts_pos[repeated_pos_ind[0]] = 1
+    #                 pts_pos[repeated_pos_ind[1]] = 2
+    #             else:
+    #                 pts_pos[repeated_pos_ind[0]] = 2
+    #                 pts_pos[repeated_pos_ind[1]] = 1
 
-        repeated_pos_ind = np.argwhere(np.array(pts_pos) == 2)[:, 0]
-        if repeated_pos_ind.shape[0] > 1:
-            if 3 not in pts_pos:
-                if pts[repeated_pos_ind[0]][0] < pts[repeated_pos_ind[1]][0]:
-                    pts_pos[repeated_pos_ind[0]] = 2
-                    pts_pos[repeated_pos_ind[1]] = 3
-                else:
-                    pts_pos[repeated_pos_ind[0]] = 3
-                    pts_pos[repeated_pos_ind[1]] = 2
-            elif 1 not in pts_pos:
-                if pts[repeated_pos_ind[0]][1] > pts[repeated_pos_ind[1]][1]:
-                    pts_pos[repeated_pos_ind[0]] = 2
-                    pts_pos[repeated_pos_ind[1]] = 1
-                else:
-                    pts_pos[repeated_pos_ind[0]] = 1
-                    pts_pos[repeated_pos_ind[1]] = 2
+    #     repeated_pos_ind = np.argwhere(np.array(pts_pos) == 2)[:, 0]
+    #     if repeated_pos_ind.shape[0] > 1:
+    #         if 3 not in pts_pos:
+    #             if pts[repeated_pos_ind[0]][0] < pts[repeated_pos_ind[1]][0]:
+    #                 pts_pos[repeated_pos_ind[0]] = 2
+    #                 pts_pos[repeated_pos_ind[1]] = 3
+    #             else:
+    #                 pts_pos[repeated_pos_ind[0]] = 3
+    #                 pts_pos[repeated_pos_ind[1]] = 2
+    #         elif 1 not in pts_pos:
+    #             if pts[repeated_pos_ind[0]][1] > pts[repeated_pos_ind[1]][1]:
+    #                 pts_pos[repeated_pos_ind[0]] = 2
+    #                 pts_pos[repeated_pos_ind[1]] = 1
+    #             else:
+    #                 pts_pos[repeated_pos_ind[0]] = 1
+    #                 pts_pos[repeated_pos_ind[1]] = 2
 
-        repeated_pos_ind = np.argwhere(np.array(pts_pos) == 3)[:, 0]
-        if repeated_pos_ind.shape[0] > 1:
-            if 2 not in pts_pos:
-                if pts[repeated_pos_ind[0]][0] > pts[repeated_pos_ind[1]][0]:
-                    pts_pos[repeated_pos_ind[0]] = 3
-                    pts_pos[repeated_pos_ind[1]] = 2
-                else:
-                    pts_pos[repeated_pos_ind[0]] = 2
-                    pts_pos[repeated_pos_ind[1]] = 3
-            elif 0 not in pts_pos:
-                if pts[repeated_pos_ind[0]][1] > pts[repeated_pos_ind[1]][1]:
-                    pts_pos[repeated_pos_ind[0]] = 3
-                    pts_pos[repeated_pos_ind[1]] = 0
-                else:
-                    pts_pos[repeated_pos_ind[0]] = 0
-                    pts_pos[repeated_pos_ind[1]] = 3
+    #     repeated_pos_ind = np.argwhere(np.array(pts_pos) == 3)[:, 0]
+    #     if repeated_pos_ind.shape[0] > 1:
+    #         if 2 not in pts_pos:
+    #             if pts[repeated_pos_ind[0]][0] > pts[repeated_pos_ind[1]][0]:
+    #                 pts_pos[repeated_pos_ind[0]] = 3
+    #                 pts_pos[repeated_pos_ind[1]] = 2
+    #             else:
+    #                 pts_pos[repeated_pos_ind[0]] = 2
+    #                 pts_pos[repeated_pos_ind[1]] = 3
+    #         elif 0 not in pts_pos:
+    #             if pts[repeated_pos_ind[0]][1] > pts[repeated_pos_ind[1]][1]:
+    #                 pts_pos[repeated_pos_ind[0]] = 3
+    #                 pts_pos[repeated_pos_ind[1]] = 0
+    #             else:
+    #                 pts_pos[repeated_pos_ind[0]] = 0
+    #                 pts_pos[repeated_pos_ind[1]] = 3
 
-        if 0 not in pts_pos or 1 not in pts_pos or 2 not in pts_pos or 3 not in pts_pos:
-            raise ValueError("pts_pos error")
+    #     if 0 not in pts_pos or 1 not in pts_pos or 2 not in pts_pos or 3 not in pts_pos:
+    #         raise ValueError("pts_pos error")
 
-        return pts_pos
+    #     return pts_pos
 
 
     # def get_pts_pos(self, pts):
@@ -337,21 +337,91 @@ class BaseDataset(data.Dataset):
     #     return pts_pos
 
 
-    def sort_pts(self, pts, ann_pts_pos):
-        pts_pos = self.get_pts_pos(pts)
+    # def sort_pts(self, pts, ann_pts_pos):
+    #     pts_pos = self.get_pts_pos(pts)
         
-        pt1_ind = pts_pos.index(ann_pts_pos[0])
-        pt2_ind = pts_pos.index(ann_pts_pos[1])
-        pt3_ind = pts_pos.index(ann_pts_pos[2])
-        pt4_ind = pts_pos.index(ann_pts_pos[3])
+    #     pt1_ind = pts_pos.index(ann_pts_pos[0])
+    #     pt2_ind = pts_pos.index(ann_pts_pos[1])
+    #     pt3_ind = pts_pos.index(ann_pts_pos[2])
+    #     pt4_ind = pts_pos.index(ann_pts_pos[3])
         
-        pt1_new = pts[pt1_ind]
-        pt2_new = pts[pt2_ind]
-        pt3_new = pts[pt3_ind]
-        pt4_new = pts[pt4_ind]
+    #     pt1_new = pts[pt1_ind]
+    #     pt2_new = pts[pt2_ind]
+    #     pt3_new = pts[pt3_ind]
+    #     pt4_new = pts[pt4_ind]
         
-        pts_new = np.asarray([pt1_new,pt2_new,pt3_new,pt4_new],np.float32)
-        return pts_new
+    #     pts_new = np.asarray([pt1_new,pt2_new,pt3_new,pt4_new],np.float32)
+    #     return pts_new
+    
+    
+    # def get_direction(self, pts, ann_pts):
+    #     pts_pos = self.get_pts_pos(pts)
+    #     ann_pts_pos = self.get_pts_pos(ann_pts)
+        
+    #     pt1_ind = pts_pos.index(ann_pts_pos[0])
+    #     pt2_ind = pts_pos.index(ann_pts_pos[1])
+        
+    #     if (pt1_ind == 0 and pt2_ind == 1) or (pt1_ind == 1 and pt2_ind == 0):
+    #         direction = 0
+    #     elif (pt1_ind == 1 and pt2_ind == 2) or (pt1_ind == 2 and pt2_ind == 1):
+    #         direction = 1
+    #     elif (pt1_ind == 2 and pt2_ind == 3) or (pt1_ind == 3 and pt2_ind == 2):
+    #         direction = 2
+    #     elif (pt1_ind == 3 and pt2_ind == 0) or (pt1_ind == 0 and pt2_ind == 3):
+    #         direction = 3
+    #     else:
+    #         raise ValueError("direction error")
+        
+    #     # ann_pts_pos = self.get_pts_pos(ann_pts)
+        
+    #     return direction
+    
+    
+    # def get_direction_vec_RBB(self, ann_pts, ct):
+    #     bl = ann_pts[0, :]
+    #     tl = ann_pts[1, :]
+    #     tr = ann_pts[2, :]
+    #     br = ann_pts[3, :]
+
+    #     tt = (np.asarray(tl, np.float32)+np.asarray(tr, np.float32))/2
+    #     rr = (np.asarray(tr, np.float32)+np.asarray(br, np.float32))/2
+    #     bb = (np.asarray(bl, np.float32)+np.asarray(br, np.float32))/2
+    #     ll = (np.asarray(tl, np.float32)+np.asarray(bl, np.float32))/2
+
+    #     direction_vec = ll - ct
+
+    #     return direction_vec
+    
+    
+    # def get_direction_vec_HBB(self, ann_pts, ct, w, h):
+    #     bl = ann_pts[0, :]
+    #     tl = ann_pts[1, :]
+    #     tr = ann_pts[2, :]
+    #     br = ann_pts[3, :]
+
+    #     tt = (np.asarray(tl, np.float32)+np.asarray(tr, np.float32))/2
+    #     rr = (np.asarray(tr, np.float32)+np.asarray(br, np.float32))/2
+    #     bb = (np.asarray(bl, np.float32)+np.asarray(br, np.float32))/2
+    #     ll = (np.asarray(tl, np.float32)+np.asarray(bl, np.float32))/2
+
+    #     direction_vec = ll - ct
+        
+    #     if np.fabs(direction_vec[0]) > np.fabs(direction_vec[1]):
+    #         if direction_vec[0] > 0:
+    #             direction_vec[0] = w/2
+    #             direction_vec[1] = 0
+    #         else:
+    #             direction_vec[0] = -w/2
+    #             direction_vec[1] = 0
+    #     else:
+    #         if direction_vec[1] > 0:
+    #             direction_vec[0] = 0
+    #             direction_vec[1] = h/2
+    #         else:
+    #             direction_vec[0] = 0
+    #             direction_vec[1] = -h/2
+
+    #     return direction_vec
 
 
     def generate_ground_truth(self, image, annotation):
@@ -364,7 +434,10 @@ class BaseDataset(data.Dataset):
         image_w = self.input_w // self.down_ratio
 
         hm = np.zeros((self.num_classes, image_h, image_w), dtype=np.float32)
-        wh = np.zeros((self.max_objs, 10), dtype=np.float32)
+        
+        # 10 + 8
+        wh = np.zeros((self.max_objs, 18), dtype=np.float32)
+        
         ## add
         cls_theta = np.zeros((self.max_objs, 1), dtype=np.float32)
         ## add end
@@ -388,14 +461,10 @@ class BaseDataset(data.Dataset):
             ind[k] = ct_int[1] * image_w + ct_int[0]
             reg[k] = ct - ct_int
             reg_mask[k] = 1
-            # generate wh ground_truth
-            ann_pts_4 = annotation['pts'][k, :]
-            ann_pts_pos = self.get_pts_pos(ann_pts_4)
-             
+            
+            # generate ground_truth of BBA vectors
             pts_4 = cv2.boxPoints(((cen_x, cen_y), (bbox_w, bbox_h), theta))  # 4 x 2
             
-            pts_4 = self.sort_pts(pts_4, ann_pts_pos)
-
             bl = pts_4[0,:]
             tl = pts_4[1,:]
             tr = pts_4[2,:]
@@ -406,14 +475,38 @@ class BaseDataset(data.Dataset):
             bb = (np.asarray(bl,np.float32)+np.asarray(br,np.float32))/2
             ll = (np.asarray(tl,np.float32)+np.asarray(bl,np.float32))/2
             
-            # if theta in [-90.0, -0.0, 0.0]:  # (-90, 0]
-            #     tt,rr,bb,ll = self.reorder_pts(tt,rr,bb,ll)
+            # reorder BBA vectors
+            if theta in [-90.0, -0.0, 0.0]:  # (-90, 0]
+                tt,rr,bb,ll = self.reorder_pts(tt,rr,bb,ll)
             
             # rotational channel
             wh[k, 0:2] = tt - ct
             wh[k, 2:4] = rr - ct
             wh[k, 4:6] = bb - ct
             wh[k, 6:8] = ll - ct
+            
+            # generate ground_truth of directional BBA vectors
+            pts_4 = annotation['pts'][k, :]
+            
+            bl = pts_4[0,:]
+            tl = pts_4[1,:]
+            tr = pts_4[2,:]
+            br = pts_4[3,:]
+
+            tt = (np.asarray(tl,np.float32)+np.asarray(tr,np.float32))/2
+            rr = (np.asarray(tr,np.float32)+np.asarray(br,np.float32))/2
+            bb = (np.asarray(bl,np.float32)+np.asarray(br,np.float32))/2
+            ll = (np.asarray(tl,np.float32)+np.asarray(bl,np.float32))/2
+            
+            # do not reorder directional BBA vectors
+            # if theta in [-90.0, -0.0, 0.0]:  # (-90, 0]
+            #     tt,rr,bb,ll = self.reorder_pts(tt,rr,bb,ll)
+            
+            # rotational channel
+            wh[k, 10:12] = tt - ct
+            wh[k, 12:14] = rr - ct
+            wh[k, 14:16] = bb - ct
+            wh[k, 16:18] = ll - ct
             #####################################################################################
             # # draw
             # cv2.line(copy_image1, (cen_x, cen_y), (int(tt[0]), int(tt[1])), (0, 0, 255), 1, 1)
