@@ -301,7 +301,10 @@ def voc_eval(detpath,
     
     # calculate accuracy of direction
     t_direction = np.sum(t_direction)
-    acc_direction = t_direction / float(npos)
+    if t_direction == 0:
+        acc_direction = float(0)
+    else:
+        acc_direction = t_direction / float(npos)
 
     rec = tp / float(npos)
     # avoid divide by zero in case the first detection matches a difficult

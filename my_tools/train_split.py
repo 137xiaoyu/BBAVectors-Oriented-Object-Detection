@@ -22,4 +22,4 @@ def run(data_dir, split):
 
 if __name__ == '__main__':
     data_dir = 'D:/137/dataset/MunichDatasetVehicleDetection-2015-old/DOTA_TrainVal'
-    run(data_dir, 672)
+    run(data_dir, 576)
