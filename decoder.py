@@ -72,6 +72,7 @@ class DecDecoder(object):
         mask = (cls_theta>0.8).float().view(batch, self.K, 1)
 
         # quadrant 1 to quadrants 4: tt ll bb rr
+        # for each quadrant: (start:end]
         
         # End of BBA vectors
         tt_x = (xs+wh[..., 0:1])*mask + (xs)*(1.-mask)
@@ -100,7 +101,7 @@ class DecDecoder(object):
         ll = 100*torch.cat((ll_x - xs, ll_y - ys), dim=2)
         direction_vec = 100*wh[..., 16:18]
         
-        # calculate cos and direction (0 to 3: tt ll bb rr)
+        # calculate cos and direction (0 to 3: tt rr bb ll)
         norm_tt = torch.linalg.norm(tt, dim=2, keepdim=True)
         norm_rr = torch.linalg.norm(rr, dim=2, keepdim=True)
         norm_bb = torch.linalg.norm(bb, dim=2, keepdim=True)

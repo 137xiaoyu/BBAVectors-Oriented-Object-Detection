@@ -72,11 +72,13 @@ def write_results(args,
 
         decoded_pts = []
         decoded_scores = []
+        decoded_directions = []
         torch.cuda.synchronize(device)
         predictions = decoder.ctdet_decode(pr_decs)
-        pts0, scores0 = decode_prediction(predictions, dsets, args, img_id, down_ratio)
+        pts0, scores0, directions0 = decode_prediction(predictions, dsets, args, img_id, down_ratio)
         decoded_pts.append(pts0)
         decoded_scores.append(scores0)
+        decoded_directions.append(directions0)
 
         # nms
         for cat in dsets.category:
@@ -84,13 +86,16 @@ def write_results(args,
                 continue
             pts_cat = []
             scores_cat = []
-            for pts0, scores0 in zip(decoded_pts, decoded_scores):
+            directions_cat = []
+            for pts0, scores0, directions0 in zip(decoded_pts, decoded_scores, decoded_directions):
                 pts_cat.extend(pts0[cat])
                 scores_cat.extend(scores0[cat])
+                directions_cat.extend(directions0[cat])
             pts_cat = np.asarray(pts_cat, np.float32)
             scores_cat = np.asarray(scores_cat, np.float32)
+            directions_cat = np.asarray(directions_cat, np.float32)
             if pts_cat.shape[0]:
-                nms_results = non_maximum_suppression(pts_cat, scores_cat)
+                nms_results = non_maximum_suppression(pts_cat, scores_cat, directions_cat)
                 results[cat][img_id].extend(nms_results)
         if print_ps:
             print('testing {}/{} data {}'.format(index+1, len(dsets), img_id))
@@ -101,5 +106,5 @@ def write_results(args,
         with open(os.path.join(result_path, 'Task1_{}.txt'.format(cat)), 'w') as f:
             for img_id in results[cat]:
                 for pt in results[cat][img_id]:
-                    f.write('{} {:.12f} {:.1f} {:.1f} {:.1f} {:.1f} {:.1f} {:.1f} {:.1f} {:.1f}\n'.format(
-                        img_id, pt[8], pt[0], pt[1], pt[2], pt[3], pt[4], pt[5], pt[6], pt[7]))
+                    f.write('{} {:.12f} {:.1f} {:.1f} {:.1f} {:.1f} {:.1f} {:.1f} {:.1f} {:.1f} {:.1f}\n'.format(
+                        img_id, pt[8], pt[9], pt[0], pt[1], pt[2], pt[3], pt[4], pt[5], pt[6], pt[7]))
