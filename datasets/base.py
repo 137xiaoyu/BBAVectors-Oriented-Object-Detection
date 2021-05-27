@@ -463,6 +463,7 @@ class BaseDataset(data.Dataset):
             reg_mask[k] = 1
             
             # generate ground_truth of BBA vectors
+            # BBA vectors: pts from minAreaRect, ct from minAreaRect
             pts_4 = cv2.boxPoints(((cen_x, cen_y), (bbox_w, bbox_h), theta))  # 4 x 2
             
             bl = pts_4[0,:]
@@ -486,6 +487,7 @@ class BaseDataset(data.Dataset):
             wh[k, 6:8] = ll - ct
             
             # generate ground_truth of directional BBA vectors
+            # directional BBA vectors: pts from ann, ct from minAreaRect
             pts_4 = annotation['pts'][k, :]
             
             bl = pts_4[0,:]

@@ -17,6 +17,19 @@ import numpy as np
 import matplotlib.pyplot as plt
 import polyiou
 from functools import partial
+import cv2
+
+def reorder_pts(tt, rr, bb, ll):
+    pts = np.asarray([tt,rr,bb,ll],np.float32)
+    l_ind = np.argmin(pts[:,0])
+    r_ind = np.argmax(pts[:,0])
+    t_ind = np.argmin(pts[:,1])
+    b_ind = np.argmax(pts[:,1])
+    tt_new = pts[t_ind,:]
+    rr_new = pts[r_ind,:]
+    bb_new = pts[b_ind,:]
+    ll_new = pts[l_ind,:]
+    return tt_new,rr_new,bb_new,ll_new
 
 def parse_gt(filename):
     """
@@ -49,23 +62,77 @@ def parse_gt(filename):
                                          float(splitlines[7])]
                 
                 # generate ground truth of direction
-                center_pt_x = np.mean(np.array([float(splitlines[0]), float(splitlines[2]),
-                                                float(splitlines[4]), float(splitlines[6])]))
-                center_pt_y = np.mean(np.array([float(splitlines[1]), float(splitlines[3]),
-                                                float(splitlines[5]), float(splitlines[7])]))
-                direction_vec_x = (float(splitlines[0]) + float(splitlines[2]))/2 - center_pt_x
-                direction_vec_y = (float(splitlines[1]) + float(splitlines[3]))/2 - center_pt_y
                 
-                if direction_vec_x >= 0 and direction_vec_y < 0:
-                    direction = 0
-                elif direction_vec_x < 0 and direction_vec_y <= 0:
-                    direction = 3
-                elif direction_vec_x <= 0 and direction_vec_y > 0:
-                    direction = 2
-                elif direction_vec_x > 0 and direction_vec_y >= 0:
-                    direction = 1
-                else:
-                    raise ValueError('direction error')
+                # result direction: det_directional_BBAvec compared with det_BBAvec
+                # gt direction: ann_directional_BBAvec compared with ann_BBAvec
+                
+                # ann_directional_BBAvec
+                # directional BBA vectors: pts from ann, ct from minAreaRect
+                ann_pts = np.asarray(object_struct['bbox'], np.float32).reshape((-1, 2))
+                pt_0 = ann_pts[0,:]
+                pt_1 = ann_pts[1,:]            
+                direction_vec = (np.asarray(pt_0,np.float32)+np.asarray(pt_1,np.float32))/2
+                
+                # ann_BBAvec
+                # BBA vectors: pts from minAreaRect, ct from minAreaRect
+                rect = cv2.minAreaRect(ann_pts)
+                (cen_x, cen_y), (bbox_w, bbox_h), theta = rect
+                pts_4 = cv2.boxPoints(((cen_x, cen_y), (bbox_w, bbox_h), theta))  # 4 x 2
+            
+                bl = pts_4[0,:]
+                tl = pts_4[1,:]
+                tr = pts_4[2,:]
+                br = pts_4[3,:]
+
+                tt = (np.asarray(tl,np.float32)+np.asarray(tr,np.float32))/2
+                rr = (np.asarray(tr,np.float32)+np.asarray(br,np.float32))/2
+                bb = (np.asarray(bl,np.float32)+np.asarray(br,np.float32))/2
+                ll = (np.asarray(tl,np.float32)+np.asarray(bl,np.float32))/2
+                
+                # reorder BBA vectors
+                if theta in [-90.0, -0.0, 0.0]:  # (-90, 0]
+                    tt,rr,bb,ll = reorder_pts(tt,rr,bb,ll)
+
+                # compute all BBA vectors and main direction vector
+                tt = 100*(tt - np.asarray([cen_x, cen_y], np.float32))
+                rr = 100*(rr - np.asarray([cen_x, cen_y], np.float32))
+                bb = 100*(bb - np.asarray([cen_x, cen_y], np.float32))
+                ll = 100*(ll - np.asarray([cen_x, cen_y], np.float32))
+                direction_vec = 100*(direction_vec - np.asarray([cen_x, cen_y], np.float32))
+                
+                # compute cos and direction (0 to 3: tt rr bb ll)
+                norm_tt = np.linalg.norm(tt)
+                norm_rr = np.linalg.norm(rr)
+                norm_bb = np.linalg.norm(bb)
+                norm_ll = np.linalg.norm(ll)
+                norm_direction_vec = np.linalg.norm(direction_vec)
+                
+                cos_tt = np.sum(tt*direction_vec)/norm_tt/norm_direction_vec
+                cos_rr = np.sum(rr*direction_vec)/norm_rr/norm_direction_vec
+                cos_bb = np.sum(bb*direction_vec)/norm_bb/norm_direction_vec
+                cos_ll = np.sum(ll*direction_vec)/norm_ll/norm_direction_vec
+                
+                cos_all = np.asarray([cos_tt,cos_rr,cos_bb,cos_ll], np.float32)
+                direction = np.argmax(cos_all)
+
+                # another way (not recommended, but has higher accuracy)
+                # center_pt_x = np.mean(np.array([float(splitlines[0]), float(splitlines[2]),
+                #                                 float(splitlines[4]), float(splitlines[6])]))
+                # center_pt_y = np.mean(np.array([float(splitlines[1]), float(splitlines[3]),
+                #                                 float(splitlines[5]), float(splitlines[7])]))
+                # direction_vec_x = (float(splitlines[0]) + float(splitlines[2]))/2 - center_pt_x
+                # direction_vec_y = (float(splitlines[1]) + float(splitlines[3]))/2 - center_pt_y
+                
+                # if direction_vec_x >= 0 and direction_vec_y < 0:
+                #     direction = 0   # tt
+                # elif direction_vec_x < 0 and direction_vec_y <= 0:
+                #     direction = 3   # ll
+                # elif direction_vec_x <= 0 and direction_vec_y > 0:
+                #     direction = 2   # bb
+                # elif direction_vec_x > 0 and direction_vec_y >= 0:
+                #     direction = 1   # rr
+                # else:
+                #     raise ValueError('direction error')
                 
                 object_struct['direction'] = int(direction)
                 
@@ -170,7 +237,7 @@ def voc_eval(detpath,
     for imagename in imagenames:
         R = [obj for obj in recs[imagename] if obj['name'] == classname]
         bbox = np.array([x['bbox'] for x in R])
-        difficult = np.array([x['difficult'] for x in R]).astype(np.bool)
+        difficult = np.array([x['difficult'] for x in R]).astype(bool)
         directions = np.array([x['direction'] for x in R]).astype(np.int32)
         det = [False] * len(R)
         npos = npos + sum(~difficult)
@@ -216,6 +283,7 @@ def voc_eval(detpath,
     tp = np.zeros(nd)
     fp = np.zeros(nd)
     t_direction = np.zeros(nd)
+    count = 0
     for d in range(nd):
         R = class_recs[image_ids[d]]
         bb = BB[d, :].astype(float)
@@ -274,38 +342,35 @@ def voc_eval(detpath,
                 jmax = np.argmax(overlaps)
                 # pdb.set_trace()
                 jmax = BBGT_keep_index[jmax]
-                
-                # compare direction
-                if direction == direction_gt[BBGT_keep_index[np.argmax(overlaps)]]:
-                    t_direction[d] = 1
 
         if ovmax > ovthresh:
             if not R['difficult'][jmax]:
                 if not R['det'][jmax]:
+                    # compare direction
+                    if direction == direction_gt[jmax]:
+                        t_direction[d] = 1
                     tp[d] = 1.
                     R['det'][jmax] = 1
                 else:
                     fp[d] = 1.
         else:
             fp[d] = 1.
+            count = count + 1
 
-    # compute precision recall
-
-    print('check fp:', fp)
-    print('check tp', tp)
-
-
-    print('npos num:', npos)
-    fp = np.cumsum(fp)
-    tp = np.cumsum(tp)
-    
-    # calculate accuracy of direction
+    # compute the accuracy of direction
     t_direction = np.sum(t_direction)
     if t_direction == 0:
         acc_direction = float(0)
     else:
-        acc_direction = t_direction / float(npos)
+        acc_direction = t_direction / float(np.sum(tp))
 
+    # compute precision recall
+    print('check fp:', fp)
+    print('check tp', tp)
+    print('npos num:', npos)
+    
+    fp = np.cumsum(fp)
+    tp = np.cumsum(tp)
     rec = tp / float(npos)
     # avoid divide by zero in case the first detection matches a difficult
     # ground truth
