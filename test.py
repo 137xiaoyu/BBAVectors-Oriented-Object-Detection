@@ -149,6 +149,7 @@ class TestModule(object):
                 for pred in result:
                     score = pred[8]
                     direction = pred[9]
+                    theta = pred[10]
                     
                     tr = np.asarray([pred[0], pred[1]], np.float32)
                     br = np.asarray([pred[2], pred[3]], np.float32)

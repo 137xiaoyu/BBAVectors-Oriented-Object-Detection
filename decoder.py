@@ -1,5 +1,6 @@
 import torch.nn.functional as F
 import torch
+import numpy as np
 
 class DecDecoder(object):
     def __init__(self, K, conf_thresh, num_classes):
@@ -69,7 +70,7 @@ class DecDecoder(object):
         # add
         cls_theta = self._tranpose_and_gather_feat(cls_theta, inds)
         cls_theta = cls_theta.view(batch, self.K, 1)
-        mask = (cls_theta>0.8).float().view(batch, self.K, 1)
+        mask = (cls_theta>0.7).float().view(batch, self.K, 1)
 
         # quadrant 1 to quadrants 4: tt ll bb rr
         # for each quadrant: (start:end]
@@ -115,6 +116,13 @@ class DecDecoder(object):
         
         cos_all = torch.cat((cos_tt,cos_rr,cos_bb,cos_ll))
         direction = torch.argmax(cos_all, dim=0, keepdim=True)
+        
+        # theta: [0, 360)
+        direction_mask = (direction_vec[..., 1:2] >= 0).float()
+        theta = torch.acos(direction_vec[..., 0:1]/norm_direction_vec)*direction_mask + \
+            (np.radians(360) - torch.acos(direction_vec[..., 0:1]/norm_direction_vec))*(1 - direction_mask)
+        # add theta
+        direction = torch.cat((direction, theta), dim=2)
         
         # #
         detections = torch.cat([xs,                      # cen_x

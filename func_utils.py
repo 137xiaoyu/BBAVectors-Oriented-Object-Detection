@@ -24,7 +24,7 @@ def decode_prediction(predictions, dsets, args, img_id, down_ratio):
         br = bb + rr - cen_pt
         score = pred[10]
         clse = pred[11]
-        direction = pred[12]
+        direction = pred[12:14]
         pts = np.asarray([tr, br, bl, tl], np.float32)
         pts[:, 0] = pts[:, 0] * down_ratio / args.input_w * w
         pts[:, 1] = pts[:, 1] * down_ratio / args.input_h * h
@@ -44,7 +44,8 @@ def non_maximum_suppression(pts, scores, directions):
                                pts[:, 3:4, 0],
                                pts[:, 3:4, 1],
                                scores[:, np.newaxis],
-                               directions[:, np.newaxis]], axis=1)
+                               directions[:, 0, np.newaxis],
+                               directions[:, 1, np.newaxis]], axis=1)
     nms_item = np.asarray(nms_item, np.float64)
     keep_index = py_cpu_nms_poly_fast(dets=nms_item, thresh=0.1)
     return nms_item[keep_index]
@@ -106,5 +107,5 @@ def write_results(args,
         with open(os.path.join(result_path, 'Task1_{}.txt'.format(cat)), 'w') as f:
             for img_id in results[cat]:
                 for pt in results[cat][img_id]:
-                    f.write('{} {:.12f} {:.1f} {:.1f} {:.1f} {:.1f} {:.1f} {:.1f} {:.1f} {:.1f} {:.1f}\n'.format(
-                        img_id, pt[8], pt[9], pt[0], pt[1], pt[2], pt[3], pt[4], pt[5], pt[6], pt[7]))
+                    f.write('{} {:.12f} {:.1f} {:.12f} {:.1f} {:.1f} {:.1f} {:.1f} {:.1f} {:.1f} {:.1f} {:.1f}\n'.format(
+                        img_id, pt[8], pt[9], pt[10], pt[0], pt[1], pt[2], pt[3], pt[4], pt[5], pt[6], pt[7]))

@@ -462,6 +462,30 @@ class BaseDataset(data.Dataset):
             reg[k] = ct - ct_int
             reg_mask[k] = 1
             
+            # generate ground_truth of directional BBA vectors
+            # directional BBA vectors: pts from ann, ct from minAreaRect
+            ann_pts_4 = annotation['pts'][k, :]
+            
+            bl = ann_pts_4[0,:]
+            tl = ann_pts_4[1,:]
+            tr = ann_pts_4[2,:]
+            br = ann_pts_4[3,:]
+
+            tt = (np.asarray(tl,np.float32)+np.asarray(tr,np.float32))/2
+            rr = (np.asarray(tr,np.float32)+np.asarray(br,np.float32))/2
+            bb = (np.asarray(bl,np.float32)+np.asarray(br,np.float32))/2
+            ll = (np.asarray(tl,np.float32)+np.asarray(bl,np.float32))/2
+            
+            # do not reorder directional BBA vectors
+            # if theta in [-90.0, -0.0, 0.0]:  # (-90, 0]
+            #     tt,rr,bb,ll = self.reorder_pts(tt,rr,bb,ll)
+            
+            # rotational channel
+            wh[k, 10:12] = tt - ct
+            wh[k, 12:14] = rr - ct
+            wh[k, 14:16] = bb - ct
+            wh[k, 16:18] = ll - ct
+            
             # generate ground_truth of BBA vectors
             # BBA vectors: pts from minAreaRect, ct from minAreaRect
             pts_4 = cv2.boxPoints(((cen_x, cen_y), (bbox_w, bbox_h), theta))  # 4 x 2
@@ -485,30 +509,6 @@ class BaseDataset(data.Dataset):
             wh[k, 2:4] = rr - ct
             wh[k, 4:6] = bb - ct
             wh[k, 6:8] = ll - ct
-            
-            # generate ground_truth of directional BBA vectors
-            # directional BBA vectors: pts from ann, ct from minAreaRect
-            pts_4 = annotation['pts'][k, :]
-            
-            bl = pts_4[0,:]
-            tl = pts_4[1,:]
-            tr = pts_4[2,:]
-            br = pts_4[3,:]
-
-            tt = (np.asarray(tl,np.float32)+np.asarray(tr,np.float32))/2
-            rr = (np.asarray(tr,np.float32)+np.asarray(br,np.float32))/2
-            bb = (np.asarray(bl,np.float32)+np.asarray(br,np.float32))/2
-            ll = (np.asarray(tl,np.float32)+np.asarray(bl,np.float32))/2
-            
-            # do not reorder directional BBA vectors
-            # if theta in [-90.0, -0.0, 0.0]:  # (-90, 0]
-            #     tt,rr,bb,ll = self.reorder_pts(tt,rr,bb,ll)
-            
-            # rotational channel
-            wh[k, 10:12] = tt - ct
-            wh[k, 12:14] = rr - ct
-            wh[k, 14:16] = bb - ct
-            wh[k, 16:18] = ll - ct
             #####################################################################################
             # # draw
             # cv2.line(copy_image1, (cen_x, cen_y), (int(tt[0]), int(tt[1])), (0, 0, 255), 1, 1)

@@ -19,6 +19,7 @@ import polyiou
 from functools import partial
 import cv2
 
+
 def reorder_pts(tt, rr, bb, ll):
     pts = np.asarray([tt,rr,bb,ll],np.float32)
     l_ind = np.argmin(pts[:,0])
@@ -30,6 +31,54 @@ def reorder_pts(tt, rr, bb, ll):
     bb_new = pts[b_ind,:]
     ll_new = pts[l_ind,:]
     return tt_new,rr_new,bb_new,ll_new
+
+
+def ex_box_jaccard(a, b):
+    a = np.asarray(a, np.float32)
+    b = np.asarray(b, np.float32)
+    inter_x1 = np.maximum(np.min(a[:,0]), np.min(b[:,0]))
+    inter_x2 = np.minimum(np.max(a[:,0]), np.max(b[:,0]))
+    inter_y1 = np.maximum(np.min(a[:,1]), np.min(b[:,1]))
+    inter_y2 = np.minimum(np.max(a[:,1]), np.max(b[:,1]))
+    if inter_x1>=inter_x2 or inter_y1>=inter_y2:
+        return 0.
+    x1 = np.minimum(np.min(a[:,0]), np.min(b[:,0]))
+    x2 = np.maximum(np.max(a[:,0]), np.max(b[:,0]))
+    y1 = np.minimum(np.min(a[:,1]), np.min(b[:,1]))
+    y2 = np.maximum(np.max(a[:,1]), np.max(b[:,1]))
+    mask_w = np.int(np.ceil(x2-x1))
+    mask_h = np.int(np.ceil(y2-y1))
+    mask_a = np.zeros(shape=(mask_h, mask_w), dtype=np.uint8)
+    mask_b = np.zeros(shape=(mask_h, mask_w), dtype=np.uint8)
+    a[:,0] -= x1
+    a[:,1] -= y1
+    b[:,0] -= x1
+    b[:,1] -= y1
+    mask_a = cv2.fillPoly(mask_a, pts=np.asarray([a], 'int32'), color=1)
+    mask_b = cv2.fillPoly(mask_b, pts=np.asarray([b], 'int32'), color=1)
+    inter = np.logical_and(mask_a, mask_b).sum()
+    union = np.logical_or(mask_a, mask_b).sum()
+    iou = float(inter)/(float(union)+1e-12)
+    # cv2.imshow('img1', np.uint8(mask_a*255))
+    # cv2.imshow('img2', np.uint8(mask_b*255))
+    # k = cv2.waitKey(0)
+    # if k==ord('q'):
+    #     cv2.destroyAllWindows()
+    #     exit()
+    return iou
+
+
+def cal_bbox_pts(pts_4):
+    x1 = np.min(pts_4[:,0])
+    x2 = np.max(pts_4[:,0])
+    y1 = np.min(pts_4[:,1])
+    y2 = np.max(pts_4[:,1])
+    bl = [x1, y2]
+    tl = [x1, y1]
+    tr = [x2, y1]
+    br = [x2, y2]
+    return np.asarray([bl, tl, tr, br], np.float32)
+
 
 def parse_gt(filename):
     """
@@ -61,61 +110,100 @@ def parse_gt(filename):
                                          float(splitlines[6]),
                                          float(splitlines[7])]
                 
-                # generate ground truth of direction
                 
-                # result direction: det_directional_BBAvec compared with det_BBAvec
-                # gt direction: ann_directional_BBAvec compared with ann_BBAvec
-                
-                # ann_directional_BBAvec
+                # generate ground truth of theta: [0, 360)
                 # directional BBA vectors: pts from ann, ct from minAreaRect
                 ann_pts = np.asarray(object_struct['bbox'], np.float32).reshape((-1, 2))
                 pt_0 = ann_pts[0,:]
                 pt_1 = ann_pts[1,:]            
                 direction_vec = (np.asarray(pt_0,np.float32)+np.asarray(pt_1,np.float32))/2
                 
-                # ann_BBAvec
-                # BBA vectors: pts from minAreaRect, ct from minAreaRect
                 rect = cv2.minAreaRect(ann_pts)
                 (cen_x, cen_y), (bbox_w, bbox_h), theta = rect
-                pts_4 = cv2.boxPoints(((cen_x, cen_y), (bbox_w, bbox_h), theta))  # 4 x 2
-            
-                bl = pts_4[0,:]
-                tl = pts_4[1,:]
-                tr = pts_4[2,:]
-                br = pts_4[3,:]
-
-                tt = (np.asarray(tl,np.float32)+np.asarray(tr,np.float32))/2
-                rr = (np.asarray(tr,np.float32)+np.asarray(br,np.float32))/2
-                bb = (np.asarray(bl,np.float32)+np.asarray(br,np.float32))/2
-                ll = (np.asarray(tl,np.float32)+np.asarray(bl,np.float32))/2
+                ct = np.asarray([cen_x, cen_y], np.float32)
                 
-                # reorder BBA vectors
-                if theta in [-90.0, -0.0, 0.0]:  # (-90, 0]
-                    tt,rr,bb,ll = reorder_pts(tt,rr,bb,ll)
-
-                # compute all BBA vectors and main direction vector
-                tt = 100*(tt - np.asarray([cen_x, cen_y], np.float32))
-                rr = 100*(rr - np.asarray([cen_x, cen_y], np.float32))
-                bb = 100*(bb - np.asarray([cen_x, cen_y], np.float32))
-                ll = 100*(ll - np.asarray([cen_x, cen_y], np.float32))
-                direction_vec = 100*(direction_vec - np.asarray([cen_x, cen_y], np.float32))
-                
-                # compute cos and direction (0 to 3: tt rr bb ll)
-                norm_tt = np.linalg.norm(tt)
-                norm_rr = np.linalg.norm(rr)
-                norm_bb = np.linalg.norm(bb)
-                norm_ll = np.linalg.norm(ll)
+                direction_vec = 100*(direction_vec - ct)
                 norm_direction_vec = np.linalg.norm(direction_vec)
                 
-                cos_tt = np.sum(tt*direction_vec)/norm_tt/norm_direction_vec
-                cos_rr = np.sum(rr*direction_vec)/norm_rr/norm_direction_vec
-                cos_bb = np.sum(bb*direction_vec)/norm_bb/norm_direction_vec
-                cos_ll = np.sum(ll*direction_vec)/norm_ll/norm_direction_vec
+                direction_mask = float((direction_vec[1] >= 0))
+                theta = np.arccos(direction_vec[0]/norm_direction_vec)*direction_mask + \
+                    (np.radians(360) - np.arccos(direction_vec[0]/norm_direction_vec))*(1 - direction_mask)
                 
-                cos_all = np.asarray([cos_tt,cos_rr,cos_bb,cos_ll], np.float32)
-                direction = np.argmax(cos_all)
+                
+                # # generate ground truth of direction
+                # # result direction: det_directional_BBAvec compared with det_BBAvec
+                # # gt direction: ann_directional_BBAvec compared with ann_BBAvec
+                # # ann_directional_BBAvec
+                # # directional BBA vectors: pts from ann, ct from minAreaRect
+                # ann_pts = np.asarray(object_struct['bbox'], np.float32).reshape((-1, 2))
+                # pt_0 = ann_pts[0,:]
+                # pt_1 = ann_pts[1,:]            
+                # direction_vec = (np.asarray(pt_0,np.float32)+np.asarray(pt_1,np.float32))/2
+                
+                # # ann_BBAvec
+                # # BBA vectors: pts from minAreaRect, ct from minAreaRect
+                # rect = cv2.minAreaRect(ann_pts)
+                # (cen_x, cen_y), (bbox_w, bbox_h), theta = rect
+                # ct = np.asarray([cen_x, cen_y], np.float32)
+                # pts_4 = cv2.boxPoints(((cen_x, cen_y), (bbox_w, bbox_h), theta))  # 4 x 2
+            
+                # bl = pts_4[0,:]
+                # tl = pts_4[1,:]
+                # tr = pts_4[2,:]
+                # br = pts_4[3,:]
 
-                # another way (not recommended, but has higher accuracy)
+                # tt = (np.asarray(tl,np.float32)+np.asarray(tr,np.float32))/2
+                # rr = (np.asarray(tr,np.float32)+np.asarray(br,np.float32))/2
+                # bb = (np.asarray(bl,np.float32)+np.asarray(br,np.float32))/2
+                # ll = (np.asarray(tl,np.float32)+np.asarray(bl,np.float32))/2
+                
+                # # reorder BBA vectors
+                # if theta in [-90.0, -0.0, 0.0]:  # (-90, 0]
+                #     tt,rr,bb,ll = reorder_pts(tt,rr,bb,ll)
+                
+                # cls_theta = 0
+                # jaccard_score = ex_box_jaccard(pts_4.copy(), cal_bbox_pts(pts_4).copy())
+                # if jaccard_score<0.95:
+                #     cls_theta = 1
+                    
+                # tt_x = tt[0]*cls_theta + cen_x*(1 - cls_theta)
+                # tt_y = tt[1]*cls_theta + (cen_y - bbox_h)*(1 - cls_theta)
+                # rr_x = rr[0]*cls_theta + (cen_x + bbox_w)*(1 - cls_theta)
+                # rr_y = rr[1]*cls_theta + cen_y*(1 - cls_theta)
+                # bb_x = bb[0]*cls_theta + cen_x*(1 - cls_theta)
+                # bb_y = bb[1]*cls_theta + (cen_y + bbox_h)*(1 - cls_theta)
+                # ll_x = ll[0]*cls_theta + (cen_x - bbox_w)*(1 - cls_theta)
+                # ll_y = ll[1]*cls_theta + cen_y*(1 - cls_theta)
+                
+                # tt = np.asarray([tt_x, tt_y], np.float32)
+                # rr = np.asarray([rr_x, rr_y], np.float32)
+                # bb = np.asarray([bb_x, bb_y], np.float32)
+                # ll = np.asarray([ll_x, ll_y], np.float32)
+
+                # # compute all BBA vectors and main direction vector
+                # tt = 100*(tt - ct)
+                # rr = 100*(rr - ct)
+                # bb = 100*(bb - ct)
+                # ll = 100*(ll - ct)
+                # direction_vec = 100*(direction_vec - ct)
+                
+                # # compute cos and direction (0 to 3: tt rr bb ll)
+                # norm_tt = np.linalg.norm(tt)
+                # norm_rr = np.linalg.norm(rr)
+                # norm_bb = np.linalg.norm(bb)
+                # norm_ll = np.linalg.norm(ll)
+                # norm_direction_vec = np.linalg.norm(direction_vec)
+                
+                # cos_tt = np.sum(tt*direction_vec)/norm_tt/norm_direction_vec
+                # cos_rr = np.sum(rr*direction_vec)/norm_rr/norm_direction_vec
+                # cos_bb = np.sum(bb*direction_vec)/norm_bb/norm_direction_vec
+                # cos_ll = np.sum(ll*direction_vec)/norm_ll/norm_direction_vec
+                
+                # cos_all = np.asarray([cos_tt,cos_rr,cos_bb,cos_ll], np.float32)
+                # direction = np.argmax(cos_all)
+
+
+                # # another way (not recommended)
                 # center_pt_x = np.mean(np.array([float(splitlines[0]), float(splitlines[2]),
                 #                                 float(splitlines[4]), float(splitlines[6])]))
                 # center_pt_y = np.mean(np.array([float(splitlines[1]), float(splitlines[3]),
@@ -134,7 +222,8 @@ def parse_gt(filename):
                 # else:
                 #     raise ValueError('direction error')
                 
-                object_struct['direction'] = int(direction)
+                # object_struct['direction'] = int(direction)
+                object_struct['theta'] = theta
                 
                 objects.append(object_struct)
             else:
@@ -238,12 +327,14 @@ def voc_eval(detpath,
         R = [obj for obj in recs[imagename] if obj['name'] == classname]
         bbox = np.array([x['bbox'] for x in R])
         difficult = np.array([x['difficult'] for x in R]).astype(bool)
-        directions = np.array([x['direction'] for x in R]).astype(np.int32)
+        # directions = np.array([x['direction'] for x in R]).astype(np.int32)
+        thetas = np.array([x['theta'] for x in R]).astype(np.float32)
         det = [False] * len(R)
         npos = npos + sum(~difficult)
         class_recs[imagename] = {'bbox': bbox,
                                  'difficult': difficult,
-                                 'direction': directions,
+                                #  'direction': directions,
+                                 'theta': thetas,
                                  'det': det}
 
     # read dets from Task1* files
@@ -254,11 +345,12 @@ def voc_eval(detpath,
     splitlines = [x.strip().split(' ') for x in lines]
     image_ids = [x[0] for x in splitlines]
     confidence = np.array([float(x[1]) for x in splitlines])
-    directions = np.array([int(float(x[2])) for x in splitlines])
+    # directions = np.array([int(float(x[2])) for x in splitlines])
+    thetas = np.array([float(x[3]) for x in splitlines])
 
     #print('check confidence: ', confidence)
 
-    BB = np.array([[float(z) for z in x[3:]] for x in splitlines])
+    BB = np.array([[float(z) for z in x[4:]] for x in splitlines])
     
     # if no detected target
     if BB.shape[0] == 0:
@@ -275,7 +367,8 @@ def voc_eval(detpath,
     ## note the usage only in numpy not for list
     BB = BB[sorted_ind, :]
     image_ids = [image_ids[x] for x in sorted_ind]
-    directions = [directions[x] for x in sorted_ind]
+    # directions = [directions[x] for x in sorted_ind]
+    thetas = [thetas[x] for x in sorted_ind]
     #print('check imge_ids: ', image_ids)
     #print('imge_ids len:', len(image_ids))
     # go down dets and mark TPs and FPs
@@ -287,10 +380,12 @@ def voc_eval(detpath,
     for d in range(nd):
         R = class_recs[image_ids[d]]
         bb = BB[d, :].astype(float)
-        direction = directions[d].astype(int)
+        # direction = directions[d].astype(int)
+        theta = thetas[d].astype(float)
         ovmax = -np.inf
         BBGT = R['bbox'].astype(float)
-        direction_gt = R['direction'].astype(int)
+        # direction_gt = R['direction'].astype(int)
+        theta_gt = R['theta'].astype(float)
         
         ## compute det bb with each BBGT
 
@@ -347,8 +442,15 @@ def voc_eval(detpath,
             if not R['difficult'][jmax]:
                 if not R['det'][jmax]:
                     # compare direction
-                    if direction == direction_gt[jmax]:
+                    # if direction == direction_gt[jmax]:
+                    #     t_direction[d] = 1
+                    # else:
+                    #     print(direction, direction_gt[jmax], bb, BBGT_keep, '\n')
+                    # compare theta
+                    if np.fabs((theta - theta_gt[jmax])) <= np.radians(40):
                         t_direction[d] = 1
+                    else:
+                        print(theta, theta_gt[jmax], bb, BBGT_keep, '\n')
                     tp[d] = 1.
                     R['det'][jmax] = 1
                 else:
