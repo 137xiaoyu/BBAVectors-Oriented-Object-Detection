@@ -98,7 +98,7 @@ class TestModule(object):
         for cnt, data_dict in enumerate(data_loader):
             image = data_dict['image'][0].to(self.device)
             img_id = data_dict['img_id'][0]
-            print('processing {}/{} image ...'.format(cnt, len(data_loader)))
+            print('processing {}/{} image ...'.format(cnt + 1, len(data_loader)))
             begin_time = time.time()
             with torch.no_grad():
                 pr_decs = self.model(image)
@@ -208,11 +208,18 @@ class TestModule(object):
                     box = np.int0(box)
                     cv2.drawContours(ori_image, [box], 0, (255, 255, 255), 1)
 
-            cv2.imshow('pr_image', ori_image)
-            k = cv2.waitKey(0) & 0xFF
-            if k == ord('q'):
-                cv2.destroyAllWindows()
-                exit()
+            # show result
+            # cv2.imshow('pr_image', ori_image)
+            # k = cv2.waitKey(0) & 0xFF
+            # if k == ord('q'):
+            #     cv2.destroyAllWindows()
+            #     exit()
+            
+            # save result
+            if not os.path.exists('result_img_dota'):
+                os.mkdir('result_img_dota')
+            cv2.imwrite('result_img_dota/' + str(cnt + 1).zfill(len(str(len(data_loader)))) + '.png', ori_image)
+            
             #"""
 
         total_time = total_time[1:]
