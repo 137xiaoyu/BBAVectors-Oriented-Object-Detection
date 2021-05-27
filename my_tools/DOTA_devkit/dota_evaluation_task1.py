@@ -447,7 +447,7 @@ def voc_eval(detpath,
                     # else:
                     #     print(direction, direction_gt[jmax], bb, BBGT_keep, '\n')
                     # compare theta
-                    if np.fabs((theta - theta_gt[jmax])) <= np.radians(40):
+                    if np.fabs((theta - theta_gt[jmax])) <= np.radians(30):
                         t_direction[d] = 1
                     else:
                         print(theta, theta_gt[jmax], bb, BBGT_keep, '\n')

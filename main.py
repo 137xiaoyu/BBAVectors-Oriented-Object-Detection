@@ -23,7 +23,7 @@ def parse_args():
     
     parser.add_argument('--num_epoch', type=int, default=60, help='Number of epochs')
     parser.add_argument('--resume_train', type=str, default='', help='Weights resumed in training')
-    parser.add_argument('--phase', type=str, default='eval', help='Phase choice= {train, test, eval}')
+    parser.add_argument('--phase', type=str, default='train', help='Phase choice= {train, test, eval}')
     parser.add_argument('--resume', type=str, default='model_last.pth', help='Weights resumed in testing and evaluation')
     parser.add_argument('--conf_thresh', type=float, default=0.2, help='Confidence threshold, 0.1 for general evaluation')
     
