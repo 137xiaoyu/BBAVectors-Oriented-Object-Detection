@@ -6,6 +6,8 @@ import math
 train_data_dir = 'D:\\137\\学业\\研究生\\课堂\\第二学期\\模式识别实验\\data\\MunichDatasetVehicleDetection-2015-old\\Train'
 output_dota_ann_dir = 'dota_ann_files'
 CONVERT_TO_INTEGER = False  # convert to integer if necessary
+categories = ['pkw', 'pkw_trail', 'truck', 'truck_trail', 'van_trail', 'cam', 'bus']
+categories_num = {cat: 0 for cat in categories}
 
 
 if __name__ == '__main__':
@@ -13,7 +15,7 @@ if __name__ == '__main__':
     if not os.path.exists(output_dota_ann_dir):
         os.makedirs(output_dota_ann_dir)
 
-    categories = []
+    # categories = []
     label_num = 0
     for img_path in img_paths:
         img_prefix = img_path.split('.JPG')[0]
@@ -28,8 +30,8 @@ if __name__ == '__main__':
                 with open(ann_path, 'r') as ann_file:
                     category = ann_path.split(
                         'Tunnel_')[-1].split('_', maxsplit=1)[-1].split('.')[0]
-                    if category not in categories:
-                        categories.append(category)
+                    # if category not in categories:
+                    #     categories.append(category)
 
                     lines = ann_file.readlines()
                     for line in lines:
@@ -69,7 +71,9 @@ if __name__ == '__main__':
                         seq = [x1, y1, x2, y2, x3, y3, x4, y4, category, '0']
                         line_to_write = sep.join(seq) + '\n'
                         dota_ann_file.write(line_to_write)
+                        categories_num[category] = categories_num[category] + 1
                         label_num = label_num + 1
 
-    print(categories)
+    # print(categories)
+    print(categories_num)
     print(label_num)
