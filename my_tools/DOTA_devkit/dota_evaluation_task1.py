@@ -449,8 +449,8 @@ def voc_eval(detpath,
                     # compare theta
                     if np.fabs((theta - theta_gt[jmax])) <= np.radians(30):
                         t_direction[d] = 1
-                    else:
-                        print(theta, theta_gt[jmax], bb, BBGT_keep, '\n')
+                    # else:
+                    #     print(theta, theta_gt[jmax], bb, BBGT_keep, '\n')
                     tp[d] = 1.
                     R['det'][jmax] = 1
                 else:
@@ -491,9 +491,14 @@ def main():
     #             'basketball-court', 'storage-tank',  'soccer-ball-field', 'roundabout', 'harbor', 'swimming-pool', 'helicopter']
 
     detpath = r'D:\\137\\workspace\\python_projects\\BBAVectors-Oriented-Object-Detection\\result_dota\\Task1_{:s}.txt'
+    
     annopath = r'D:\\137\\dataset\\MunichDatasetVehicleDetection-2015-old\\DOTA_TrainVal\\labelTxt\\{:s}.txt' # change the directory to the path of val/labelTxt, if you want to do evaluation on the valset
     imagesetfile = r'D:\\137\\dataset\\MunichDatasetVehicleDetection-2015-old\\DOTA_TrainVal\\valset.txt'
 
+    # annopath = r'D:\\137\\dataset\\MunichDatasetVehicleDetection-2015-old\\DOTA_All\\labelTxt\\{:s}.txt' # change the directory to the path of val/labelTxt, if you want to do evaluation on the valset
+    # imagesetfile = r'D:\\137\\dataset\\MunichDatasetVehicleDetection-2015-old\\DOTA_All\\valset.txt'
+
+    
     # For DOTA-v1.5
     # classnames = ['plane', 'baseball-diamond', 'bridge', 'ground-track-field', 'small-vehicle', 'large-vehicle', 'ship', 'tennis-court',
     #             'basketball-court', 'storage-tank',  'soccer-ball-field', 'roundabout', 'harbor', 'swimming-pool', 'helicopter', 'container-crane']

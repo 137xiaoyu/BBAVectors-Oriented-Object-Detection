@@ -5,6 +5,7 @@ weights_dota
 weights_dota_*
 merge_dota
 result_dota
+result_dota_*
 heatmap.png
 dota_ann_files
 result_img_dota
